@@ -150,7 +150,8 @@ define([
 
         this._clock = options.clock;
         this._intervals = options.intervals;
-        this._clippingPlanes = options.clippingPlanes;
+        this._clippingPlanes = undefined;
+        this.clippingPlanes = options.clippingPlanes;
         this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
         this._loadTimestamp = undefined;
         this._clippingPlanesState = 0;
@@ -401,12 +402,10 @@ define([
         var transform = defaultValue(frame.transform, Matrix4.IDENTITY);
         pointCloud.modelMatrix = Matrix4.multiplyTransformation(that.modelMatrix, transform, scratchModelMatrix);
         pointCloud.style = that.style;
-        pointCloud.styleDirty = that._styleDirty;
         pointCloud.time = updateState.timeSinceLoad;
         pointCloud.shadows = that.shadows;
         pointCloud.clippingPlanes = that._clippingPlanes;
         pointCloud.isClipped = updateState.isClipped;
-        pointCloud.clippingPlanesDirty = updateState.clippingPlanesDirty;
 
         var pointCloudShading = that.pointCloudShading;
         if (defined(pointCloudShading)) {
@@ -504,6 +503,18 @@ define([
         return previousInterval;
     }
 
+    function setFramesDirty(that, clippingPlanesDirty, styleDirty) {
+        var frames = that._frames;
+        var framesLength = frames.length;
+        for (var i = 0; i < framesLength; ++i) {
+            var frame = frames[i];
+            if (defined(frame) && defined(frame.pointCloud)) {
+                frame.pointCloud.clippingPlanesDirty = clippingPlanesDirty;
+                frame.pointCloud.styleDirty = styleDirty;
+            }
+        }
+    }
+
     var updateState = {
         timeSinceLoad : 0,
         isClipped : false,
@@ -548,9 +559,15 @@ define([
             clippingPlanesDirty = true;
         }
 
+        var styleDirty = this._styleDirty;
+        this._styleDirty = false;
+
+        if (clippingPlanesDirty || styleDirty) {
+            setFramesDirty(this, clippingPlanesDirty, styleDirty);
+        }
+
         updateState.timeSinceLoad = timeSinceLoad;
         updateState.isClipped = isClipped;
-        updateState.clippingPlanesDirty = clippingPlanesDirty;
 
         var pointCloudShading = this.pointCloudShading;
         var eyeDomeLighting = this._pointCloudEyeDomeLighting;
@@ -620,10 +637,36 @@ define([
         }
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see TimeDynamicPointCloud#destroy
+     */
+
     TimeDynamicPointCloud.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @example
+     * pointCloud = pointCloud && pointCloud.destroy();
+     *
+     * @see TimeDynamicPointCloud#isDestroyed
+     */
     TimeDynamicPointCloud.prototype.destroy = function() {
         unloadFrames(this);
         this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();

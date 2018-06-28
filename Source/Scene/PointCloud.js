@@ -1312,6 +1312,7 @@ define([
         }
 
         if (this.clippingPlanesDirty) {
+            this.clippingPlanesDirty = false;
             shadersDirty = true;
         }
 
@@ -1331,7 +1332,10 @@ define([
         }
 
         if (this._style !== this.style || this.styleDirty) {
+            console.log(this._style);
+            console.log(this.style);
             this._style = this.style;
+            this.styleDirty = false;
             shadersDirty = true;
         }
 
