@@ -29,6 +29,7 @@ define([
      */
     function Cesium3DTilesetTraversal() {
     }
+<<<<<<< HEAD
 
     var VisibilityFlag = {
         NONE : 0,
@@ -79,6 +80,8 @@ define([
         ancestorStack : new ManagedArray(),
         ancestorStackMaximumLength : 0
     };
+=======
+>>>>>>> request-performance
 
     Cesium3DTilesetTraversal.selectTiles = function(tileset, frameState) {
         if (tileset.debugFreezeFrame) {
@@ -90,7 +93,11 @@ define([
         tileset._emptyTiles.length = 0;
         tileset._hasMixedContent = false;
 
+<<<<<<< HEAD
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+=======
+        tileset._cache.reset();
+>>>>>>> request-performance
 
         var root = tileset._root;
         updateTile(tileset, root, frameState);
@@ -390,8 +397,16 @@ define([
         }
     }
 
+<<<<<<< HEAD
     function hasEmptyContent(tile) {
         return tile.hasEmptyContent || tile.hasTilesetContent;
+=======
+    function touch(tileset, tile, outOfCore) {
+        if (!outOfCore) {
+            return;
+        }
+        tileset._cache.touch(tile);
+>>>>>>> request-performance
     }
 
     function hasUnloadedContent(tile) {
